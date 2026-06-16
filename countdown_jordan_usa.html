@@ -1,0 +1,119 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', var(--font-sans), sans-serif; }
+  .wrap { padding: 2.5rem 1.5rem; text-align: center; }
+  .heading { font-size: 13px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-text-tertiary); margin-bottom: 0.5rem; }
+  .title { font-size: 28px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 0.25rem; line-height: 1.2; }
+  .subtitle { font-size: 15px; color: var(--color-text-secondary); margin-bottom: 2.5rem; font-weight: 400; }
+  .clocks { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2.5rem; }
+  .clock-card { background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1.25rem 1rem; }
+  .clock-flag { font-size: 28px; margin-bottom: 0.4rem; }
+  .clock-label { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-text-tertiary); margin-bottom: 0.5rem; font-weight: 500; }
+  .clock-time { font-size: 26px; font-weight: 500; color: var(--color-text-primary); letter-spacing: 0.03em; font-variant-numeric: tabular-nums; }
+  .clock-date { font-size: 12px; color: var(--color-text-secondary); margin-top: 0.3rem; }
+  .divider { border: none; border-top: 0.5px solid var(--color-border-tertiary); margin: 2rem 0; }
+  .countdown-label { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-text-tertiary); margin-bottom: 1.25rem; font-weight: 500; }
+  .countdown-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; }
+  .unit { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem 0.5rem; }
+  .unit-num { font-size: 36px; font-weight: 500; color: var(--color-text-primary); font-variant-numeric: tabular-nums; line-height: 1; }
+  .unit-label { font-size: 11px; color: var(--color-text-tertiary); margin-top: 0.4rem; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 400; }
+  .destination { margin-top: 2.5rem; font-size: 13px; color: var(--color-text-tertiary); }
+  .destination span { color: var(--color-text-secondary); font-weight: 500; }
+  .line { display: flex; align-items: center; gap: 0.75rem; margin: 0 auto; max-width: 320px; justify-content: center; margin-top: 1.75rem; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--color-text-tertiary); flex-shrink: 0; }
+  .dash-line { flex: 1; border-top: 1.5px dashed var(--color-border-secondary); }
+  .plane { font-size: 18px; }
+</style>
+<div class="wrap">
+  <p class="heading">Time &amp; Countdown</p>
+  <h1 class="title">Counting down to June 24th</h1>
+  <p class="subtitle">11:30 PM Jordan time · the moment we've been waiting for</p>
+
+  <div class="line">
+    <div class="dot"></div>
+    <div class="dash-line"></div>
+    <span class="plane">✈</span>
+    <div class="dash-line"></div>
+    <div class="dot"></div>
+  </div>
+
+  <hr class="divider" style="margin-top: 1.75rem;">
+
+  <div class="clocks">
+    <div class="clock-card">
+      <div class="clock-flag">🇯🇴</div>
+      <div class="clock-label">Jordan (AST)</div>
+      <div class="clock-time" id="jo-time">--:--:--</div>
+      <div class="clock-date" id="jo-date">--</div>
+    </div>
+    <div class="clock-card">
+      <div class="clock-flag">🇺🇸</div>
+      <div class="clock-label">USA (ET)</div>
+      <div class="clock-time" id="us-time">--:--:--</div>
+      <div class="clock-date" id="us-date">--</div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <p class="countdown-label">Time remaining until June 24, 2025 · 23:30 Jordan time</p>
+  <div class="countdown-grid">
+    <div class="unit"><div class="unit-num" id="cd-days">--</div><div class="unit-label">Days</div></div>
+    <div class="unit"><div class="unit-num" id="cd-hours">--</div><div class="unit-label">Hours</div></div>
+    <div class="unit"><div class="unit-num" id="cd-mins">--</div><div class="unit-label">Minutes</div></div>
+    <div class="unit"><div class="unit-num" id="cd-secs">--</div><div class="unit-label">Seconds</div></div>
+  </div>
+
+  <p class="destination" style="margin-top:1.5rem;" id="dest-msg"></p>
+</div>
+
+<script>
+function pad(n) { return String(n).padStart(2,'0'); }
+
+function formatInZone(date, tz) {
+  return {
+    time: date.toLocaleTimeString('en-GB', { timeZone: tz, hour:'2-digit', minute:'2-digit', second:'2-digit', hour12: false }),
+    date: date.toLocaleDateString('en-GB', { timeZone: tz, weekday:'short', day:'numeric', month:'short', year:'numeric' })
+  };
+}
+
+function tick() {
+  const now = new Date();
+
+  const jo = formatInZone(now, 'Asia/Amman');
+  const us = formatInZone(now, 'America/New_York');
+
+  document.getElementById('jo-time').textContent = jo.time;
+  document.getElementById('jo-date').textContent = jo.date;
+  document.getElementById('us-time').textContent = us.time;
+  document.getElementById('us-date').textContent = us.date;
+
+  const target = new Date('2025-06-24T23:30:00+03:00');
+  const diff = target - now;
+
+  const destMsg = document.getElementById('dest-msg');
+
+  if (diff <= 0) {
+    document.getElementById('cd-days').textContent = '00';
+    document.getElementById('cd-hours').textContent = '00';
+    document.getElementById('cd-mins').textContent = '00';
+    document.getElementById('cd-secs').textContent = '00';
+    destMsg.innerHTML = '🎉 The moment has arrived!';
+  } else {
+    const days = Math.floor(diff / 86400000);
+    const hours = Math.floor((diff % 86400000) / 3600000);
+    const mins = Math.floor((diff % 3600000) / 60000);
+    const secs = Math.floor((diff % 60000) / 1000);
+    document.getElementById('cd-days').textContent = pad(days);
+    document.getElementById('cd-hours').textContent = pad(hours);
+    document.getElementById('cd-mins').textContent = pad(mins);
+    document.getElementById('cd-secs').textContent = pad(secs);
+    destMsg.innerHTML = 'Target: <span>24 June 2025, 23:30 — Amman, Jordan</span>';
+  }
+}
+
+tick();
+setInterval(tick, 1000);
+</script>
