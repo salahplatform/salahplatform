@@ -83,14 +83,14 @@ function tick() {
   const now = new Date();
 
   const jo = formatInZone(now, 'Asia/Amman');
-  const us = formatInZone(now, 'America/New_York');
+  const us = formatInZone(now, 'America/Chicago');
 
   document.getElementById('jo-time').textContent = jo.time;
   document.getElementById('jo-date').textContent = jo.date;
   document.getElementById('us-time').textContent = us.time;
   document.getElementById('us-date').textContent = us.date;
 
-  const target = new Date('2026-06-24T23:30:00+03:00');
+  const target = new Date('2026-06-24T23:30:00+02:00');
   const diff = target - now;
 
   const destMsg = document.getElementById('dest-msg');
@@ -110,7 +110,7 @@ function tick() {
     document.getElementById('cd-hours').textContent = pad(hours);
     document.getElementById('cd-mins').textContent = pad(mins);
     document.getElementById('cd-secs').textContent = pad(secs);
-    destMsg.innerHTML = 'Target: <span>24 June 2025, 23:30 — Amman, Jordan</span>';
+    destMsg.innerHTML = 'Target: <span>24 June 2026, 23:30 — Amman, Jordan</span>';
   }
 }
 
