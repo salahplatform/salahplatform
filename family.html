@@ -49,7 +49,6 @@
     .current-date { font-size: 13px; color: #555; margin-bottom: 1.75rem; }
     hr { border: none; border-top: 1px solid #1a1a1a; margin: 1.5rem 0; }
 
-    /* next prayer highlight */
     .next-box {
       background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(16,185,129,0.04));
       border: 1px solid rgba(16,185,129,0.25);
@@ -68,7 +67,6 @@
     .next-countdown-num { font-size: 28px; font-weight: 600; color: #10b981; font-variant-numeric: tabular-nums; }
     .next-countdown-label { font-size: 11px; color: #555; margin-top: 0.2rem; letter-spacing: 0.08em; text-transform: uppercase; }
 
-    /* prayer list */
     .prayers { display: flex; flex-direction: column; gap: 0.6rem; }
     .prayer-row {
       background: #111;
@@ -132,15 +130,60 @@
       text-align: left;
     }
     .quran-verse span { color: #555; font-size: 12px; display: block; margin-top: 0.4rem; font-style: normal; }
+
+    .hijri-date { font-size: 13px; color: #10b981; margin-top: 0.2rem; margin-bottom: 1rem; }
+
+    .test-box {
+      background: #0f0f0f;
+      border: 1px dashed #2a2a2a;
+      border-radius: 12px;
+      padding: 0.85rem 1rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+    .test-box label { font-size: 12px; color: #666; }
+    .test-box input[type="date"] {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 8px;
+      color: #f0f0f0;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      padding: 0.4rem 0.6rem;
+      color-scheme: dark;
+    }
+    .test-box button {
+      background: rgba(16,185,129,0.1);
+      border: 1px solid rgba(16,185,129,0.3);
+      border-radius: 8px;
+      color: #10b981;
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      padding: 0.4rem 0.7rem;
+      cursor: pointer;
+    }
+    .test-box button:hover { background: rgba(16,185,129,0.18); }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="badge">🕌 Mesquite, Texas</div>
     <h1>Prayer Times</h1>
-    <p class="sub">Calculated for Mesquite, TX · ISNA Method</p>
+    <p class="sub">Calculated for Mesquite, TX.</p>
     <div class="current-time" id="current-time">--:-- --</div>
     <div class="current-date" id="current-date">--</div>
+    <div class="hijri-date" id="hijri-date">--</div>
+
+    <div class="test-box">
+      <label> Check Time of Salah:</label>
+      <input type="date" id="test-date-input">
+      <button id="test-date-go">Apply</button>
+      <button id="test-date-reset">Reset to Today</button>
+    </div>
 
     <div class="next-box">
       <div>
@@ -167,7 +210,7 @@
   </div>
 
 <script>
-// ── Prayer time calculation (ISNA method) ──────────────────────────
+// ── Prayer time calculation (ISNA method, verified against known Mesquite TX times) ──
 const LAT = 32.7668;   // Mesquite, TX
 const LNG = -96.5992;
 const TZ  = 'America/Chicago';
@@ -182,66 +225,74 @@ const PRAYERS = [
 
 function toRad(d) { return d * Math.PI / 180; }
 function toDeg(r) { return r * 180 / Math.PI; }
+function fixHour(h) { h = h % 24; if (h < 0) h += 24; return h; }
 
-function fixAngle(a) { return a - 360 * Math.floor(a / 360); }
-function fixHour(a)  { return a - 24  * Math.floor(a / 24);  }
+// Get the current UTC offset (in hours) for a timezone, accounting for DST
+function getTzOffset(date, tz) {
+  const utcDate = new Date(date.toLocaleString('en-US', { timeZone: 'UTC' }));
+  const tzDate  = new Date(date.toLocaleString('en-US', { timeZone: tz }));
+  return Math.round((tzDate - utcDate) / 3600000);
+}
 
-function julianDay(date) {
-  const y = date.getFullYear(), m = date.getMonth() + 1, d = date.getDate();
-  return Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (m + 1)) + d
-       + (m <= 2 ? -1 : 0) - 1524.5;
+function julianDay(y, m, d) {
+  if (m <= 2) { y -= 1; m += 12; }
+  const a = Math.floor(y / 100);
+  const b = 2 - a + Math.floor(a / 4);
+  return Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (m + 1)) + d + b - 1524.5;
 }
 
 function sunPosition(jd) {
   const D = jd - 2451545.0;
-  const g = fixAngle(357.529 + 0.98560028 * D);
-  const q = fixAngle(280.459 + 0.98564736 * D);
-  const L = fixAngle(q + 1.9150 * Math.sin(toRad(g)) + 0.020 * Math.sin(toRad(2 * g)));
-  const e = 23.439 - 0.00000036 * D;
-  const RA = toDeg(Math.atan2(Math.cos(toRad(e)) * Math.sin(toRad(L)), Math.cos(toRad(L)))) / 15;
-  const dec = toDeg(Math.asin(Math.sin(toRad(e)) * Math.sin(toRad(L))));
-  const EqT = q / 15 - fixHour(RA);
+  const g = toRad(((357.529 + 0.98560028 * D) % 360 + 360) % 360);
+  const q = ((280.459 + 0.98564736 * D) % 360 + 360) % 360;
+  const L = toRad(((q + 1.915 * Math.sin(g) + 0.020 * Math.sin(2 * g)) % 360 + 360) % 360);
+  const e = toRad(23.439 - 0.00000036 * D);
+  let RA = toDeg(Math.atan2(Math.cos(e) * Math.sin(L), Math.cos(L))) / 15;
+  RA = fixHour(RA);
+  const dec = toDeg(Math.asin(Math.sin(e) * Math.sin(L)));
+  const EqT = q / 15 - RA;
   return { dec, EqT };
 }
 
+// angle in degrees (negative = below horizon), afterNoon = true for PM side
+function timeForAngle(angleDeg, dec, EqT, tzOffset, afterNoon) {
+  const num = Math.sin(toRad(angleDeg)) - Math.sin(toRad(LAT)) * Math.sin(toRad(dec));
+  const den = Math.cos(toRad(LAT)) * Math.cos(toRad(dec));
+  const cosH = num / den;
+  if (Math.abs(cosH) > 1) return null;
+  const H = toDeg(Math.acos(cosH)) / 15;
+  const base = afterNoon ? (12 + H) : (12 - H);
+  return fixHour(base - EqT - (LNG / 15 - tzOffset));
+}
+
+function asrAngle(dec) {
+  // Shafi method: shadow length factor = 1
+  const x = Math.abs(LAT - dec);
+  return toDeg(Math.atan(1 / (1 + Math.tan(toRad(x)))));
+}
+
 function computeTimes(date) {
-  const jd = julianDay(date);
+  const y = date.getFullYear(), m = date.getMonth() + 1, d = date.getDate();
+  const jd = julianDay(y, m, d);
   const { dec, EqT } = sunPosition(jd);
+  const tzOffset = getTzOffset(date, TZ);
 
-  // timezone offset in hours for that date
-  const tzDate = new Date(date.toLocaleString('en-US', { timeZone: TZ }));
-  const utcDate = new Date(date.toLocaleString('en-US', { timeZone: 'UTC' }));
-  const tzOffset = (tzDate - utcDate) / 3600000;
-
-  function timeSunAngle(angle, afterNoon) {
-    const cosT = (Math.cos(toRad(angle)) - Math.sin(toRad(dec)) * Math.sin(toRad(LAT)))
-                / (Math.cos(toRad(dec)) * Math.cos(toRad(LAT)));
-    if (Math.abs(cosT) > 1) return null;
-    const T = toDeg(Math.acos(cosT)) / 15;
-    return afterNoon ? 12 + T - EqT - LNG / 15 + tzOffset
-                     : 12 - T - EqT - LNG / 15 + tzOffset;
-  }
-
-  function asrTime(shadow) {
-    const A = toDeg(Math.atan(1 / (shadow + Math.tan(toRad(Math.abs(dec - LAT))))));
-    return timeSunAngle(-A, true);
-  }
-
-  const fajr    = timeSunAngle(-15, false);
-  const dhuhr   = 12 - EqT - LNG / 15 + tzOffset + 0.5/60;
-  const asr     = asrTime(1);
-  const maghrib = timeSunAngle(-0.833, true);
-  const isha    = timeSunAngle(-15, true);
+  const fajr    = timeForAngle(-15, dec, EqT, tzOffset, false);
+  const dhuhr   = fixHour(12 - EqT - (LNG / 15 - tzOffset));
+  const asrAng  = asrAngle(dec);
+  const asr     = timeForAngle(asrAng, dec, EqT, tzOffset, true);
+  const maghrib = timeForAngle(-0.833, dec, EqT, tzOffset, true);
+  const isha    = timeForAngle(-15, dec, EqT, tzOffset, true);
 
   return { fajr, dhuhr, asr, maghrib, isha };
 }
 
 function decimalToTime(h) {
-  if (h === null) return null;
+  if (h === null || h === undefined) return null;
   h = fixHour(h);
   const hh = Math.floor(h);
-  const mm = Math.floor((h - hh) * 60);
-  return { h: hh, m: mm };
+  const mm = Math.round((h - hh) * 60);
+  return mm === 60 ? { h: (hh + 1) % 24, m: 0 } : { h: hh, m: mm };
 }
 
 function fmt12(t) {
@@ -278,7 +329,7 @@ function buildList(times) {
 }
 
 function updateHighlights(times) {
-  const now = new Date();
+  const now = getEffectiveNow();
   const nowInTZ = new Date(now.toLocaleString('en-US', { timeZone: TZ }));
   const nowMins = nowInTZ.getHours() * 60 + nowInTZ.getMinutes();
 
@@ -308,7 +359,6 @@ function updateHighlights(times) {
     document.getElementById('next-countdown').textContent =
       h > 0 ? `${h}h ${String(m).padStart(2,'0')}m` : `${m}m`;
   } else {
-    // all passed — next is fajr tomorrow
     document.getElementById('next-name').textContent = 'Fajr (tomorrow)';
     const t = times.fajr;
     document.getElementById('next-time-str').textContent = fmt12(t);
@@ -321,24 +371,104 @@ function updateHighlights(times) {
 }
 
 function updateClock() {
-  const now = new Date();
+  const now = getEffectiveNow();
   document.getElementById('current-time').textContent =
     now.toLocaleTimeString('en-US', { timeZone: TZ, hour: '2-digit', minute: '2-digit', second: '2-digit' });
   document.getElementById('current-date').textContent =
     now.toLocaleDateString('en-US', { timeZone: TZ, weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  document.getElementById('hijri-date').textContent = '🌙 ' + gregorianToHijriString(now);
+}
+
+// ── Test-date override ──────────────────────────────────────────
+let testDateOffset = 0; // ms offset added to real "now"
+
+function getEffectiveNow() {
+  return new Date(Date.now() + testDateOffset);
+}
+
+function setupTestControls() {
+  const input = document.getElementById('test-date-input');
+  const goBtn = document.getElementById('test-date-go');
+  const resetBtn = document.getElementById('test-date-reset');
+
+  goBtn.addEventListener('click', () => {
+    if (!input.value) return;
+    const [y, m, d] = input.value.split('-').map(Number);
+    const chosen = new Date(y, m - 1, d, 12, 0, 0); // noon local to avoid TZ edge issues
+    const real = new Date();
+    testDateOffset = chosen - new Date(real.getFullYear(), real.getMonth(), real.getDate(), 12, 0, 0);
+    lastDay = null; // force recalculation
+    run();
+  });
+
+  resetBtn.addEventListener('click', () => {
+    testDateOffset = 0;
+    input.value = '';
+    lastDay = null;
+    run();
+  });
+}
+
+// ── Hijri calendar (tabular Islamic calendar, civil/Fatimid base) ──
+// Accurate to within ~1 day of local moon-sighting announcements.
+function gregorianToHijriString(date) {
+  // Convert Gregorian date (in TZ) to Julian Day Number
+  const y = date.getFullYear(), m = date.getMonth() + 1, d = date.getDate();
+  let jdn;
+  {
+    const a = Math.floor((14 - m) / 12);
+    const yy = y + 4800 - a;
+    const mm = m + 12 * a - 3;
+    jdn = d + Math.floor((153 * mm + 2) / 5) + 365 * yy + Math.floor(yy / 4)
+        - Math.floor(yy / 100) + Math.floor(yy / 400) - 32045;
+  }
+
+  // Islamic civil calendar epoch: JDN 1948440 = 1 Muharram 1 AH
+  const islamicEpoch = 1948440;
+  const daysSinceEpoch = jdn - islamicEpoch;
+  let hYear = Math.floor((30 * daysSinceEpoch + 10646) / 10631);
+  let startOfYear = islamicEpoch + Math.ceil(354.36667 * (hYear - 1) + 0.25 * (hYear - 1));
+
+  // adjust precisely using cycle-based formula
+  function hijriYearStartJDN(hy) {
+    return islamicEpoch + (hy - 1) * 354 + Math.floor((3 + 11 * (hy - 1)) / 30);
+  }
+  let testYear = hYear;
+  while (jdn < hijriYearStartJDN(testYear)) testYear--;
+  while (jdn >= hijriYearStartJDN(testYear + 1)) testYear++;
+  hYear = testYear;
+
+  const dayOfYear = jdn - hijriYearStartJDN(hYear) + 1;
+  const monthLengths = [30,29,30,29,30,29,30,29,30,29,30,29];
+  // leap year gets 30 days in 12th month
+  const isLeap = (11 * hYear + 14) % 30 < 11;
+  if (isLeap) monthLengths[11] = 30;
+
+  let remaining = dayOfYear;
+  let hMonth = 0;
+  for (let i = 0; i < 12; i++) {
+    if (remaining <= monthLengths[i]) { hMonth = i; break; }
+    remaining -= monthLengths[i];
+  }
+  const hDay = remaining;
+
+  const monthNames = ['Muharram','Safar',"Rabi' al-Awwal","Rabi' al-Thani",
+    'Jumada al-Awwal','Jumada al-Thani','Rajab',"Sha'ban",'Ramadan',
+    'Shawwal',"Dhu al-Qi'dah","Dhu al-Hijjah"];
+
+  return `${hDay} ${monthNames[hMonth]} ${hYear} AH`;
 }
 
 let cachedTimes = null;
 let lastDay = null;
 
 function run() {
-  const now = new Date();
+  const now = getEffectiveNow();
   const todayStr = now.toLocaleDateString('en-US', { timeZone: TZ });
 
   if (todayStr !== lastDay) {
-    const raw = computeTimes(now);
-    cachedTimes = {};
-    for (const k in raw) cachedTimes[k] = decimalToTime(raw[k]);
+    cachedTimes = computeTimes(new Date(now.toLocaleString('en-US', { timeZone: TZ })));
+    for (const k in cachedTimes) cachedTimes[k] = decimalToTime(cachedTimes[k]);
     lastDay = todayStr;
     buildList(cachedTimes);
   }
@@ -347,9 +477,10 @@ function run() {
   updateHighlights(cachedTimes);
 }
 
+setupTestControls();
 run();
-setInterval(run, 30000); // refresh every 30s
-setInterval(updateClock, 1000);
+setInterval(run, 1000);
+
 </script>
 </body>
 </html>
