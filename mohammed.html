@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dr. Moh — USMLE Countdown</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0a0a0a;
+      color: #f0f0f0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+    }
+
+    /* subtle background glow */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -200px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .wrap {
+      width: 100%;
+      max-width: 620px;
+      padding: 3rem 1.5rem 4rem;
+      text-align: center;
+      position: relative;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #6366f1;
+      background: rgba(99,102,241,0.1);
+      border: 1px solid rgba(99,102,241,0.2);
+      border-radius: 100px;
+      padding: 0.3rem 0.9rem;
+      margin-bottom: 1.5rem;
+      font-weight: 500;
+    }
+
+    h1 {
+      font-size: 36px;
+      font-weight: 600;
+      color: #f0f0f0;
+      line-height: 1.2;
+      margin-bottom: 0.5rem;
+    }
+
+    h1 span { color: #6366f1; }
+
+    .sub {
+      font-size: 15px;
+      color: #666;
+      margin-bottom: 2.5rem;
+      line-height: 1.6;
+    }
+
+    hr { border: none; border-top: 1px solid #1e1e1e; margin: 2rem 0; }
+
+    /* countdown */
+    .countdown-label {
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #555;
+      margin-bottom: 1.25rem;
+      font-weight: 500;
+    }
+
+    .countdown-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .unit {
+      background: #141414;
+      border: 1px solid #1e1e1e;
+      border-radius: 16px;
+      padding: 1.25rem 0.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .unit::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #6366f1, transparent);
+      opacity: 0.6;
+    }
+
+    .unit-num {
+      font-size: 44px;
+      font-weight: 600;
+      color: #f0f0f0;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+    }
+
+    .unit-label {
+      font-size: 10px;
+      color: #555;
+      margin-top: 0.5rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .target-line {
+      font-size: 12px;
+      color: #444;
+      margin-top: 0.5rem;
+    }
+    .target-line span { color: #6366f1; font-weight: 500; }
+
+    /* quote rotator */
+    .quote-box {
+      background: #111;
+      border: 1px solid #1e1e1e;
+      border-left: 3px solid #6366f1;
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      margin: 2rem 0;
+      min-height: 90px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.5s ease;
+    }
+
+    .quote-text {
+      font-size: 15px;
+      color: #ccc;
+      line-height: 1.6;
+      font-style: italic;
+    }
+
+    /* steps */
+    .steps-title {
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #555;
+      margin-bottom: 1rem;
+      font-weight: 500;
+    }
+
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      text-align: left;
+    }
+
+    .step {
+      background: #111;
+      border: 1px solid #1e1e1e;
+      border-radius: 12px;
+      padding: 0.9rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 14px;
+      color: #bbb;
+    }
+
+    .step-icon { font-size: 18px; flex-shrink: 0; }
+
+    .footer {
+      margin-top: 2.5rem;
+      font-size: 12px;
+      color: #333;
+    }
+
+    #arrived-msg {
+      font-size: 22px;
+      color: #6366f1;
+      font-weight: 600;
+      display: none;
+      margin-top: 1rem;
+    }
+
+    @media (max-width: 480px) {
+      h1 { font-size: 26px; }
+      .unit-num { font-size: 32px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="badge">USMLE Step Exam</div>
+    <h1>You've got this, <span>Dr. Moh</span> 🩺</h1>
+    <p class="sub">Every hour of studying is a brick in the foundation<br>of the doctor you're becoming.</p>
+
+    <hr>
+
+    <p class="countdown-label">Time remaining until exam day</p>
+    <div class="countdown-grid">
+      <div class="unit"><div class="unit-num" id="cd-days">--</div><div class="unit-label">Days</div></div>
+      <div class="unit"><div class="unit-num" id="cd-hours">--</div><div class="unit-label">Hours</div></div>
+      <div class="unit"><div class="unit-num" id="cd-mins">--</div><div class="unit-label">Minutes</div></div>
+      <div class="unit"><div class="unit-num" id="cd-secs">--</div><div class="unit-label">Seconds</div></div>
+    </div>
+    <p class="target-line">Target: <span>July 12, 2026 — USMLE Exam Day</span></p>
+    <p id="arrived-msg">🎉 Exam day is here — go show them what you're made of!</p>
+
+    <hr>
+
+    <div class="quote-box">
+      <p class="quote-text" id="quote-text">Loading inspiration...</p>
+    </div>
+
+    <hr>
+
+    <p class="steps-title">Remember every day</p>
+    <div class="steps">
+      <div class="step"><span class="step-icon">🧠</span> Your brain retains more than you think — trust your preparation.</div>
+      <div class="step"><span class="step-icon">📖</span> One topic at a time. Consistency beats intensity.</div>
+      <div class="step"><span class="step-icon">💤</span> Sleep is studying. Rest is part of the process.</div>
+      <div class="step"><span class="step-icon">🔥</span> You chose medicine. That alone sets you apart.</div>
+      <div class="step"><span class="step-icon">🏁</span> The exam is just one day. Your knowledge lasts a lifetime.</div>
+    </div>
+
+    <p class="footer">You are going to be an incredible doctor. 🌟</p>
+  </div>
+
+  <script>
+    const quotes = [
+      "The secret of getting ahead is getting started. You've already started — keep going.",
+      "Medicine is not just a career, it's a calling. You answered it.",
+      "Hard work beats talent when talent doesn't work hard. You have both.",
+      "Every question you get wrong today is one you'll never miss on exam day.",
+      "You didn't come this far to only come this far, Dr. Moh.",
+      "The difference between try and triumph is a little 'umph'. You have it.",
+      "Champions are made in the moments they want to quit but don't.",
+      "Your future patients are lucky — they just don't know it yet.",
+      "Difficult roads often lead to beautiful destinations. Keep driving.",
+      "You are not studying for a test. You are studying to save lives."
+    ];
+
+    let qIndex = 0;
+    const quoteEl = document.getElementById('quote-text');
+
+    function showQuote() {
+      quoteEl.style.opacity = 0;
+      setTimeout(() => {
+        quoteEl.textContent = '"' + quotes[qIndex] + '"';
+        quoteEl.style.opacity = 1;
+        qIndex = (qIndex + 1) % quotes.length;
+      }, 500);
+    }
+
+    showQuote();
+    setInterval(showQuote, 6000);
+
+    function pad(n) { return String(n).padStart(2, '0'); }
+
+    function tick() {
+      const now = new Date();
+      const target = new Date('2026-07-12T00:00:00-05:00'); // July 12 Texas time
+      const diff = target - now;
+
+      if (diff <= 0) {
+        document.getElementById('cd-days').textContent = '00';
+        document.getElementById('cd-hours').textContent = '00';
+        document.getElementById('cd-mins').textContent = '00';
+        document.getElementById('cd-secs').textContent = '00';
+        document.getElementById('arrived-msg').style.display = 'block';
+      } else {
+        const days = Math.floor(diff / 86400000);
+        const hours = Math.floor((diff % 86400000) / 3600000);
+        const mins = Math.floor((diff % 3600000) / 60000);
+        const secs = Math.floor((diff % 60000) / 1000);
+        document.getElementById('cd-days').textContent = pad(days);
+        document.getElementById('cd-hours').textContent = pad(hours);
+        document.getElementById('cd-mins').textContent = pad(mins);
+        document.getElementById('cd-secs').textContent = pad(secs);
+      }
+    }
+
+    tick();
+    setInterval(tick, 1000);
+  </script>
+</body>
+</html>
