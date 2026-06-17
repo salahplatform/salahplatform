@@ -10,8 +10,8 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Inter', sans-serif;
-      background: #f5f5f5;
-      color: #1a1a1a;
+      background: #ffffff;
+      color: #000000;
       min-height: 100vh;
       display: flex;
       align-items: center;
@@ -19,7 +19,6 @@
       overflow-x: hidden;
     }
 
-    /* subtle background glow */
     body::before {
       content: '';
       position: fixed;
@@ -28,7 +27,7 @@
       transform: translateX(-50%);
       width: 600px;
       height: 600px;
-      background: radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%);
+      background: radial-gradient(circle, rgba(99,102,241,0.06) 0%, transparent 70%);
       pointer-events: none;
     }
 
@@ -46,8 +45,8 @@
       letter-spacing: 0.15em;
       text-transform: uppercase;
       color: #6366f1;
-      background: rgba(99,102,241,0.1);
-      border: 1px solid rgba(99,102,241,0.2);
+      background: rgba(99,102,241,0.08);
+      border: 1px solid rgba(99,102,241,0.25);
       border-radius: 100px;
       padding: 0.3rem 0.9rem;
       margin-bottom: 1.5rem;
@@ -57,7 +56,7 @@
     h1 {
       font-size: 36px;
       font-weight: 600;
-      color: #f0f0f0;
+      color: #000000;
       line-height: 1.2;
       margin-bottom: 0.5rem;
     }
@@ -66,14 +65,13 @@
 
     .sub {
       font-size: 15px;
-      color: #666;
+      color: #444;
       margin-bottom: 2.5rem;
       line-height: 1.6;
     }
 
-    hr { border: none; border-top: 1px solid #1e1e1e; margin: 2rem 0; }
+    hr { border: none; border-top: 1px solid #e0e0e0; margin: 2rem 0; }
 
-    /* countdown */
     .countdown-label {
       font-size: 11px;
       letter-spacing: 0.15em;
@@ -91,8 +89,8 @@
     }
 
     .unit {
-      background: #141414;
-      border: 1px solid #1e1e1e;
+      background: #f7f7f7;
+      border: 1px solid #e0e0e0;
       border-radius: 16px;
       padding: 1.25rem 0.5rem;
       position: relative;
@@ -111,14 +109,14 @@
     .unit-num {
       font-size: 44px;
       font-weight: 600;
-      color: #f0f0f0;
+      color: #000000;
       font-variant-numeric: tabular-nums;
       line-height: 1;
     }
 
     .unit-label {
       font-size: 10px;
-      color: #555;
+      color: #666;
       margin-top: 0.5rem;
       letter-spacing: 0.1em;
       text-transform: uppercase;
@@ -126,15 +124,14 @@
 
     .target-line {
       font-size: 12px;
-      color: #444;
+      color: #555;
       margin-top: 0.5rem;
     }
     .target-line span { color: #6366f1; font-weight: 500; }
 
-    /* quote rotator */
     .quote-box {
-      background: #111;
-      border: 1px solid #1e1e1e;
+      background: #f7f7f7;
+      border: 1px solid #e0e0e0;
       border-left: 3px solid #6366f1;
       border-radius: 12px;
       padding: 1.25rem 1.5rem;
@@ -148,12 +145,11 @@
 
     .quote-text {
       font-size: 15px;
-      color: #ccc;
+      color: #222;
       line-height: 1.6;
       font-style: italic;
     }
 
-    /* steps */
     .steps-title {
       font-size: 11px;
       letter-spacing: 0.15em;
@@ -171,15 +167,15 @@
     }
 
     .step {
-      background: #111;
-      border: 1px solid #1e1e1e;
+      background: #f7f7f7;
+      border: 1px solid #e0e0e0;
       border-radius: 12px;
       padding: 0.9rem 1rem;
       display: flex;
       align-items: center;
       gap: 0.75rem;
       font-size: 14px;
-      color: #bbb;
+      color: #222;
     }
 
     .step-icon { font-size: 18px; flex-shrink: 0; }
@@ -187,7 +183,7 @@
     .footer {
       margin-top: 2.5rem;
       font-size: 12px;
-      color: #333;
+      color: #777;
     }
 
     #arrived-msg {
@@ -240,6 +236,20 @@
     </div>
 
     <p class="footer">You are going to be an incredible doctor. 🌟</p>
+
+    <div style="margin-top: 2rem;">
+      <a href="index.html" style="
+        display: inline-block;
+        padding: 0.75rem 1.5rem;
+        background: #f7f7f7;
+        border: 1px solid #e0e0e0;
+        border-radius: 12px;
+        color: #000000;
+        font-family: Inter, sans-serif;
+        font-size: 14px;
+        text-decoration: none;
+      ">🏠 Home</a>
+    </div>
   </div>
 
   <script>
